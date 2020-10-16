@@ -18,6 +18,10 @@ class LocalizationHelperServiceProvider extends ServiceProvider
             $this->bootForConsole();
         }
 
+        $this->publishes([
+            __DIR__.'/../resources/translations' => resource_path('lang'),
+        ], 'awema-pl-langs');
+        
         if (file_exists($file = __DIR__ . '/helpers.php'))
         {
             require_once $file;
