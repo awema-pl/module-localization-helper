@@ -3,11 +3,14 @@
 namespace AwemaPL\LocalizationHelper;
 
 use AwemaPL\LocalizationHelper\Contracts\LocalizationHelper as LocalizationHelperContract;
+use Illuminate\Support\Str;
+use Illuminate\Translation\Translator;
 
 class LocalizationHelper implements LocalizationHelperContract
 {
     protected $basePath;
 
+    /** @var Translator $translator */
     protected $translator;
 
     /**
@@ -31,17 +34,30 @@ class LocalizationHelper implements LocalizationHelperContract
      */
     public function trans($key, $default = null, $placeholders = [])
     {
+
         $translation = __($key, $placeholders);
+
+        if ($translation === $key){
+            return $default;
+        }
+
         if (is_array($translation)) {
             return $key;
         }
+
         if (config('app.debug')) {
+
             if (!is_array($default)) {
                 $default = [$this->translator->getFallback() => $default];
             }
-            foreach ($default as $locale => $item) {
-                $this->updateTranslation($key, $item, $locale);
-            }
+
+           if (config('localizationhelper.debug_auto_create_lang.active')){
+               foreach ($default as $locale => $item) {
+                   if (!in_array($locale, config('localizationhelper.debug_auto_create_lang.secure_override_language_files'))){
+                       $this->updateTranslation($key, $item, $locale);
+                   }
+               }
+           }
             $translation = __($key, $placeholders);
         }
 
@@ -51,8 +67,16 @@ class LocalizationHelper implements LocalizationHelperContract
     private function updateTranslation($key, $default, $locale)
     {
         $path = explode('.', $key);
+
         if ($this->canBeUpdated($default, $key, $locale) && !empty($path[1])) {
+
+            $keyAddLines = (Str::contains($key, '::')) ? explode('::', $key)[1] : $key;
+            $namespace =  (Str::contains($key, '::')) ? explode('::', $key)[0] : '*';
+
+            $this->translator->addLines([$keyAddLines => $default], $locale, $namespace);
+
             $this->translator->addLines([$key => $default], $locale);
+
             $this->writeToLangFile(
                 $locale,
                 $this->translator->get($path[0], [], $locale),
@@ -90,7 +114,17 @@ class LocalizationHelper implements LocalizationHelperContract
      */
     private function writeToLangFile($locale, $translations, $filename)
     {
-        $file = $this->basePath . "/{$locale}/{$filename}.php";
+        if (Str::contains($filename, '::')){
+            $file = $this->getFileLangModule($locale, $filename);
+        } else {
+            $file = $this->basePath . "/{$locale}/{$filename}.php";
+        }
+
+        $dir = dirname($file);
+    if (!file_exists($dir)){
+        mkdir($dir, 0777, true);
+    }
+
         try {
             if (($fp = fopen($file, 'w')) !== FALSE) {
                 $header = "<?php\n\nreturn ";
@@ -102,6 +136,24 @@ class LocalizationHelper implements LocalizationHelperContract
         } catch (\Exception $e) {
             return false;
         }
+    }
+
+    private function getFileLangModule($locale, $filename)
+    {
+        $filenameExplode = explode('::', $filename);
+        $filename = explode('.', $filenameExplode[1])[0];
+        $moduleName = mb_strtolower($filenameExplode[0]);
+
+        $parentDirModule = config('localizationhelper.debug_auto_create_lang.parent_dir_module');
+        $prefixDirModule = config('localizationhelper.debug_auto_create_lang.prefix_dir_module');
+
+        $moduleDir = $prefixDirModule . $moduleName;
+
+        if (config('localizationhelper.debug_auto_create_lang.dir_module_ucfirst')){
+            $moduleDir = Str::ucfirst($moduleDir);
+        }
+
+        return "$parentDirModule/$moduleDir/resources/lang/{$locale}/{$filename}.php";
     }
 
     /**
