@@ -3,6 +3,7 @@
 namespace AwemaPL\LocalizationHelper;
 
 use AwemaPL\LocalizationHelper\Contracts\LocalizationHelper as LocalizationHelperContract;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Illuminate\Translation\Translator;
 
@@ -182,6 +183,19 @@ class LocalizationHelper implements LocalizationHelperContract
                 return $var ? "TRUE" : "FALSE";
             default:
                 return var_export($var, TRUE);
+        }
+    }
+
+    /**
+     * Auto copy translations
+     *
+     * @return mixed
+     */
+    public function autoCopyTranslations(){
+        if (config('localizationhelper.auto_copy_translation')){
+            if (!File::exists(resource_path('lang/en.json')) && !File::exists(resource_path('lang/pl.json'))){
+                File::copyDirectory(__DIR__ .'/../resources/translations', resource_path('lang'));
+            }
         }
     }
 }

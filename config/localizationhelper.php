@@ -20,5 +20,10 @@ return [
 
         // in this language files content it will not replace
         'secure_override_language_files' => ['pl']
-    ]
+    ],
+
+    // If not exist translation for pl and en,
+    // will be copy from resources/translations
+    // to resource_path('lang').
+    'auto_copy_translation' => true,
 ];

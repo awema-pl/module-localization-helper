@@ -21,7 +21,8 @@ class LocalizationHelperServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../resources/translations' => resource_path('lang'),
         ], 'awema-pl-langs');
-        
+
+        app('localizationhelper')->autoCopyTranslations();
         if (file_exists($file = __DIR__ . '/helpers.php'))
         {
             require_once $file;
