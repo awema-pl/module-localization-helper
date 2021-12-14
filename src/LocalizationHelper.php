@@ -38,7 +38,7 @@ class LocalizationHelper implements LocalizationHelperContract
 
         $translation = __($key, $placeholders);
 
-        if ($translation === $key){
+        if ($translation === $key) {
             return $default;
         }
 
@@ -52,13 +52,13 @@ class LocalizationHelper implements LocalizationHelperContract
                 $default = [$this->translator->getFallback() => $default];
             }
 
-           if (config('localizationhelper.debug_auto_create_lang.active')){
-               foreach ($default as $locale => $item) {
-                   if (!in_array($locale, config('localizationhelper.debug_auto_create_lang.secure_override_language_files'))){
-                       $this->updateTranslation($key, $item, $locale);
-                   }
-               }
-           }
+            if (config('localizationhelper.debug_auto_create_lang.active')) {
+                foreach ($default as $locale => $item) {
+                    if (!in_array($locale, config('localizationhelper.debug_auto_create_lang.secure_override_language_files'))) {
+                        $this->updateTranslation($key, $item, $locale);
+                    }
+                }
+            }
             $translation = __($key, $placeholders);
         }
 
@@ -72,7 +72,7 @@ class LocalizationHelper implements LocalizationHelperContract
         if ($this->canBeUpdated($default, $key, $locale) && !empty($path[1])) {
 
             $keyAddLines = (Str::contains($key, '::')) ? explode('::', $key)[1] : $key;
-            $namespace =  (Str::contains($key, '::')) ? explode('::', $key)[0] : '*';
+            $namespace = (Str::contains($key, '::')) ? explode('::', $key)[0] : '*';
 
             $this->translator->addLines([$keyAddLines => $default], $locale, $namespace);
 
@@ -115,16 +115,16 @@ class LocalizationHelper implements LocalizationHelperContract
      */
     private function writeToLangFile($locale, $translations, $filename)
     {
-        if (Str::contains($filename, '::')){
+        if (Str::contains($filename, '::')) {
             $file = $this->getFileLangModule($locale, $filename);
         } else {
             $file = $this->basePath . "/{$locale}/{$filename}.php";
         }
 
         $dir = dirname($file);
-    if (!file_exists($dir)){
-        mkdir($dir, 0777, true);
-    }
+        if (!file_exists($dir)) {
+            mkdir($dir, 0777, true);
+        }
 
         try {
             if (($fp = fopen($file, 'w')) !== FALSE) {
@@ -150,7 +150,7 @@ class LocalizationHelper implements LocalizationHelperContract
 
         $moduleDir = $prefixDirModule . $moduleName;
 
-        if (config('localizationhelper.debug_auto_create_lang.dir_module_ucfirst')){
+        if (config('localizationhelper.debug_auto_create_lang.dir_module_ucfirst')) {
             $moduleDir = Str::ucfirst($moduleDir);
         }
 
@@ -191,10 +191,11 @@ class LocalizationHelper implements LocalizationHelperContract
      *
      * @return mixed
      */
-    public function autoCopyTranslations(){
-        if (config('localizationhelper.auto_copy_translation')){
-            if (!File::exists(resource_path('lang/en.json')) && !File::exists(resource_path('lang/pl.json'))){
-                File::copyDirectory(__DIR__ .'/../resources/translations', resource_path('lang'));
+    public function autoCopyTranslations()
+    {
+        if (config('localizationhelper.auto_copy_translation')) {
+            if (!File::exists(resource_path('lang/en.json')) && !File::exists(resource_path('lang/pl.json'))) {
+                File::copyDirectory(__DIR__ . '/../resources/translations', resource_path('lang'));
             }
         }
     }
